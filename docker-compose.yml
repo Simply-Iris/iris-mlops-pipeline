@@ -11,7 +11,7 @@ services:
 
   trainer:
     build: ./trainer
-    image: simplyiris/ml-trainer:latest
+    image: simplyiris/ml-trainer-nn:latest
     volumes:
       - model_store:/model_store
     restart: "no"

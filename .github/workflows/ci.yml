@@ -23,7 +23,7 @@ jobs:
         with:
           context: ./trainer
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ml-trainer:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ml-trainer-nn:latest
 
       - name: Build and push api
         uses: docker/build-push-action@v5
