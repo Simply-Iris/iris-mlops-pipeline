@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - neural-network
 
 jobs:
   build-and-push:
