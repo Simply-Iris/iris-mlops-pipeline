@@ -1,0 +1,79 @@
+services:
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.13.0
+    ports:
+      - "5001:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server --host "0.0.0.0"  --port 5000  --backend-store-uri /mlflow/tracking  --default-artifact-root /mlflow/artifacts
+
+  trainer:
+    build: ./trainer
+    image: simplyiris/ml-trainer:latest
+    volumes:
+      - model_store:/model_store
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - GF_LOG_LEVEL= error
+    depends_on:
+      - prometheus
+
+  api:
+    build: ./api
+    env_file: .env
+    image: simplyiris/ml-api:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - model_store:/model_store
+    restart: unless-stopped
+    depends_on:
+      - trainer
+      - redis
+      - postgres
+
+volumes:
+  model_store:
+  mlflow_data:
+  postgres_data:
+  grafana_data:
